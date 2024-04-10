@@ -16,9 +16,7 @@ func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
 		Age:      20,
 	}
 
-	response := json.NewEncoder(w).Encode(user)
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(user)
 
 }

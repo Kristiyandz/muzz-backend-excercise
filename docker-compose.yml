@@ -1,0 +1,27 @@
+version: "3"
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: muzzmaindb
+    volumes:
+      - ./mysql/init/:/docker-entrypoint-initdb.d
+      - muzzdb:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  api:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    environment:
+      - CGO_ENABLED=0
+      - GOOS=linux
+volumes:
+  muzzdb:
