@@ -46,14 +46,14 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "/swpie cannot connect to DB", http.StatusInternalServerError)
 		return
 	}
 	defer db.Close()
 
 	rows, err := db.Query(interactionsQuery, targetUserId, currentUserId, match)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
 		return
 	}
 
@@ -63,7 +63,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		err := rows.Scan(&isMatch)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "/swipe cannot scan rows", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -72,13 +72,13 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		matchQuery := `INSERT INTO matches(user1_id, user2_id, created_at) VALUES (?, ?, ?)`
 		_, err := db.Exec(matchQuery, currentUserId, targetUserId, time.Now())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "/swipe cannot execute match query", http.StatusInternalServerError)
 			return
 		}
 
 		userIdIntValue, err := strconv.Atoi(targetUserId)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "/swipe failed to convert str to int", http.StatusInternalServerError)
 			return
 		}
 		result := user.MatchedResultResponseBody{
@@ -92,7 +92,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		interactionsInsertQuery := `INSERT INTO interactions (user_id, target_user_id, choice, created_at) VALUES (?, ?, ?, ?)`
 		_, err := db.Exec(interactionsInsertQuery, currentUserId, targetUserId, match, time.Now())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "/swipe failed to insert into interactions", http.StatusInternalServerError)
 			return
 		}
 	}
