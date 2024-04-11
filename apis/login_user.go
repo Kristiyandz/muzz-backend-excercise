@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os/user"
 
 	"github.com/Kristiyandz/muzz-backend-excercise/models/user"
 	generatejwt "github.com/Kristiyandz/muzz-backend-excercise/pkg/generate_jwt"
@@ -30,10 +31,10 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	var storedHashedPassword string
-	var userUUID string
-	query := "SELECT password_hash, uuid FROM users WHERE email = ?"
+	var userId int
+	query := "SELECT password_hash, id FROM users WHERE email = ?"
 
-	err = db.QueryRow(query, reqBody.Email).Scan(&storedHashedPassword, &userUUID)
+	err = db.QueryRow(query, reqBody.Email).Scan(&storedHashedPassword, &userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -44,7 +45,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt := generatejwt.GenerateJWT(reqBody.Email, userUUID)
+	jwt := generatejwt.GenerateJWT(reqBody.Email, userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -29,7 +29,7 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	var users user.UsersTableRecord
 	var allUsers []user.DiscoverUserResponseBody
 	for rows.Next() {
-		err := rows.Scan(&users.ID, &users.Uuid, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.CreatedAt, &users.UpdatedAt)
+		err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.CreatedAt, &users.UpdatedAt)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

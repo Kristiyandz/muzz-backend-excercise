@@ -28,7 +28,6 @@ type UserLoginResponseBody struct {
 
 type UsersTableRecord struct {
 	ID        int    `json:"id"`
-	Uuid      string `json:"uuid"`
 	Email     string `json:"email"`
 	Password  string `json:"password_hash"`
 	Name      string `json:"name"`

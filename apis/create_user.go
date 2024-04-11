@@ -7,46 +7,55 @@ import (
 
 	"github.com/Kristiyandz/muzz-backend-excercise/models/user"
 	hashpassword "github.com/Kristiyandz/muzz-backend-excercise/pkg/hash_password"
-	randomchoide "github.com/Kristiyandz/muzz-backend-excercise/pkg/random_choice"
+	randomchoice "github.com/Kristiyandz/muzz-backend-excercise/pkg/random_choice"
 	"github.com/brianvoe/gofakeit/v7"
 )
 
 func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Generate a random password & hash it
 	randomPassword := gofakeit.Password(true, true, true, true, false, 14)
 	hashedPassword, err := hashpassword.HashPassword(randomPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Generate a random gender selection
 	choices := []interface{}{"Male", "Female", "Other", "Prefer not to say"}
+	randomGenderChoice := randomchoice.RandomChoiceFromSlice(choices).(string)
+
+	// Create a random user
 	randomUser := user.User{
 		Email:    gofakeit.Email(),
 		Password: randomPassword,
 		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Gender:   randomchoide.RandomChoice(choices...).(string),
+		Gender:   randomGenderChoice,
 		Age:      gofakeit.Number(18, 100),
 	}
 
+	// Insert the random user into the database
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "/user/create cannot connect to db", http.StatusInternalServerError)
 		return
 	}
 	defer db.Close()
 
-	query := "INSERT INTO users (email, password_hash, name, gender, age) VALUES (UUID_TO_BIN(?), ?, ?, ?, ?, ?)"
-	result, err = db.Exec(query, randomUser.Email, hashedPassword, randomUser.Name, randomUser.Gender, randomUser.Age)
+	query := "INSERT INTO users (email, password_hash, name, gender, age) VALUES (?, ?, ?, ?, ?)"
+	result, err := db.Exec(query, randomUser.Email, hashedPassword, randomUser.Name, randomUser.Gender, randomUser.Age)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "/user/create cannot insert user", http.StatusInternalServerError)
 		return
 	}
 
+	// Get the ID of the inserted user
 	id, err := result.LastInsertId()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "/user/create cannot get last iserted index", http.StatusInternalServerError)
 		return
 	}
 
+	// Return the created user
 	response := user.UserCreateResponseBody{
 		ID:       int(id),
 		Email:    randomUser.Email,
@@ -57,6 +66,6 @@ func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(randomUser)
+	json.NewEncoder(w).Encode(response)
 
 }

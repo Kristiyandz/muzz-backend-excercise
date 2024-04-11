@@ -3,7 +3,6 @@ package generatejwt
 import (
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -43,20 +42,18 @@ func loadSignKey() string {
 }
 
 // asymmetric encryption using a private key and a public key to verify the token
-func GenerateJWT(userEmail, userUUID string) string {
+func GenerateJWT(userEmail string, userId int) string {
 	var (
 		key string
 		t   *jwt.Token
 		s   string
 	)
-	// https://gist.github.com/ygotthilf/baa58da5c3dd1f69fae9 - example of how to generate a key
+
 	key = loadSignKey()
 
-	fmt.Println("THE KEY", key)
-
 	t = jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"email":     userEmail,
-		"user_uuid": userUUID,
+		"email":   userEmail,
+		"user_id": userId,
 	})
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(key))
 	if err != nil {
