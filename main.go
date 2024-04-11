@@ -17,5 +17,9 @@ func main() {
 	http.HandleFunc("/discover", func(w http.ResponseWriter, r *http.Request) {
 		middleware.JWTAuthMiddleware(http.HandlerFunc(apis.DiscoverUsersHandler)).ServeHTTP(w, r)
 	})
+
+	http.HandleFunc("/swipe", func(w http.ResponseWriter, r *http.Request) {
+		middleware.JWTAuthMiddleware(http.HandlerFunc(apis.SwipeHandler)).ServeHTTP(w, r)
+	})
 	http.ListenAndServe(":8080", nil)
 }

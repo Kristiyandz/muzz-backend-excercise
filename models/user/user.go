@@ -36,4 +36,9 @@ type DiscoverUserResponseBody struct {
 	Age    int    `json:"age"`
 }
 
+type MatchedResultResponseBody struct {
+	Match   bool `json:"match"`
+	MatchID int  `json:"matchId"`
+}
+
 // continue the code here

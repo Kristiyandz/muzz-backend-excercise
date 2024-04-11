@@ -1,7 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS muzzmaindb.matches(
 	id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    user1_id BINARY(16),
-    user1_id BINARY(16),
+    user1_id INT,
+    user2_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
