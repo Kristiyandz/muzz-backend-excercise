@@ -11,6 +11,7 @@ RUN go mod download
 
 # copy source code
 COPY *.go ./
+COPY . ./
 
 # build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /muzz-docker-api
@@ -20,3 +21,10 @@ EXPOSE 8080
 
 # run the binary
 CMD [ "/muzz-docker-api" ]
+
+# download the required Go dependencies
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
+#COPY *.go ./
+COPY . ./
