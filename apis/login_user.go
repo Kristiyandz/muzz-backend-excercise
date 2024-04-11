@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"os/user"
 
 	"github.com/Kristiyandz/muzz-backend-excercise/models/user"
 	generatejwt "github.com/Kristiyandz/muzz-backend-excercise/pkg/generate_jwt"

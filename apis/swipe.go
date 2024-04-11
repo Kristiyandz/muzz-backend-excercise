@@ -81,12 +81,12 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "/swipe failed to convert str to int", http.StatusInternalServerError)
 			return
 		}
-		result := user.MatchedResultResponseBody{
+		matchResult := user.MatchedResultResponseBody{
 			Match:   true,
-			MatchID: userIdIntValue,
+			MatchID: &userIdIntValue,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
+		json.NewEncoder(w).Encode(matchResult)
 
 	} else {
 		interactionsInsertQuery := `INSERT INTO interactions (user_id, target_user_id, choice, created_at) VALUES (?, ?, ?, ?)`
@@ -95,6 +95,12 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "/swipe failed to insert into interactions", http.StatusInternalServerError)
 			return
 		}
+		noMatchResult := user.MatchedResultResponseBody{
+			Match:   false,
+			MatchID: nil,
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(noMatchResult)
 	}
 
 }

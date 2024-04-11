@@ -46,7 +46,7 @@ type DiscoverUserResponseBody struct {
 
 type MatchedResultResponseBody struct {
 	Match   bool `json:"match"`
-	MatchID int  `json:"matchId"`
+	MatchID *int `json:"matchId"`
 }
 
 // continue the code here
