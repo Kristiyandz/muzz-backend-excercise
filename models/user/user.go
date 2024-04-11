@@ -8,6 +8,15 @@ type User struct {
 	Age      int    `json:"age"`
 }
 
+type UserCreateResponseBody struct {
+	ID       int    `json:"id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name"`
+	Gender   string `json:"gender"`
+	Age      int    `json:"age"`
+}
+
 type UserLoginRequestBody struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
