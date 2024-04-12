@@ -9,6 +9,7 @@ import (
 	hashpassword "github.com/Kristiyandz/muzz-backend-excercise/pkg/hash_password"
 	randomchoice "github.com/Kristiyandz/muzz-backend-excercise/pkg/random_choice"
 	"github.com/brianvoe/gofakeit/v7"
+	"github.com/icrowley/fake"
 )
 
 func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,11 +27,13 @@ func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create a random user
 	randomUser := user.User{
-		Email:    gofakeit.Email(),
-		Password: randomPassword,
-		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Gender:   randomGenderChoice,
-		Age:      gofakeit.Number(18, 100),
+		Email:     gofakeit.Email(),
+		Password:  randomPassword,
+		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
+		Gender:    randomGenderChoice,
+		Age:       gofakeit.Number(18, 100),
+		Latitude:  fake.Latitude(),
+		Longitude: fake.Longitude(),
 	}
 
 	// Insert the random user into the database
@@ -41,10 +44,10 @@ func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	query := "INSERT INTO users (email, password_hash, name, gender, age) VALUES (?, ?, ?, ?, ?)"
-	result, err := db.Exec(query, randomUser.Email, hashedPassword, randomUser.Name, randomUser.Gender, randomUser.Age)
+	query := "INSERT INTO users (email, password_hash, name, gender, age, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	result, err := db.Exec(query, randomUser.Email, hashedPassword, randomUser.Name, randomUser.Gender, randomUser.Age, randomUser.Latitude, randomUser.Longitude)
 	if err != nil {
-		http.Error(w, "/user/create cannot insert user", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

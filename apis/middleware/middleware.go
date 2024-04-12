@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -63,9 +64,6 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 
 		publicKey := loadPublicKey()
 
-		fmt.Println("THE PUBLIC KEY", publicKey)
-		fmt.Println("THE TOKEN", bearerToken[1])
-
 		token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -79,14 +77,13 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			// Optionally, inspect claims...
-			fmt.Println(claims["sub"])
+			ctx := context.WithValue(r.Context(), "user_id", claims["user_id"])
+			fmt.Println(claims["user_id"], "user_id")
+			fmt.Println(ctx, "ctx")
+			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
-
-		// Token is valid, proceed with the next handler.
-		next.ServeHTTP(w, r)
 	})
 }

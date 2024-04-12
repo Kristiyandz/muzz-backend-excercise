@@ -10,6 +10,8 @@ import (
 
 func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 
+	authenticatedUserID := r.Context().Value("user_id")
+
 	query := "SELECT * FROM users"
 
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
@@ -29,17 +31,20 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	var users user.UsersTableRecord
 	var allUsers []user.DiscoverUserResponseBody
 	for rows.Next() {
-		err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.CreatedAt, &users.UpdatedAt)
+		// need to be SCANNED IN A ROW
+		err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.CreatedAt, &users.UpdatedAt, &users.Latitude, &users.Longitude)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		allUsers = append(allUsers, user.DiscoverUserResponseBody{
-			ID:     users.ID,
-			Name:   users.Name,
-			Gender: users.Gender,
-			Age:    users.Age,
+			ID:        users.ID,
+			Name:      users.Name,
+			Gender:    users.Gender,
+			Age:       users.Age,
+			Latitude:  users.Latitude,
+			Longitude: users.Longitude,
 		})
 	}
 

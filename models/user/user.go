@@ -1,11 +1,13 @@
 package user
 
 type User struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Name     string `json:"name"`
-	Gender   string `json:"gender"`
-	Age      int    `json:"age"`
+	Email     string  `json:"email"`
+	Password  string  `json:"password"`
+	Name      string  `json:"name"`
+	Gender    string  `json:"gender"`
+	Age       int     `json:"age"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
 }
 
 type UserCreateResponseBody struct {
@@ -27,21 +29,25 @@ type UserLoginResponseBody struct {
 }
 
 type UsersTableRecord struct {
-	ID        int    `json:"id"`
-	Email     string `json:"email"`
-	Password  string `json:"password_hash"`
-	Name      string `json:"name"`
-	Gender    string `json:"gender"`
-	Age       int    `json:"age"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	ID        int     `json:"id"`
+	Email     string  `json:"email"`
+	Password  string  `json:"password_hash"`
+	Name      string  `json:"name"`
+	Gender    string  `json:"gender"`
+	Age       int     `json:"age"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
 }
 
 type DiscoverUserResponseBody struct {
-	ID     int    `json:"id"`
-	Name   string `json:"name"`
-	Gender string `json:"gender"`
-	Age    int    `json:"age"`
+	ID        int     `json:"id"`
+	Name      string  `json:"name"`
+	Gender    string  `json:"gender"`
+	Age       int     `json:"age"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
 }
 
 type MatchedResultResponseBody struct {
