@@ -2,6 +2,7 @@ package querymapper
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type UserDAO struct {
@@ -13,7 +14,16 @@ func ExtendedUserDAO(db *sql.DB) UserDAO {
 }
 
 func (dao *UserDAO) FetchAllUsers(loggedInUserID string) (*sql.Rows, error) {
-	stmt, err := dao.db.Prepare("SELECT * FROM users WHERE id != ?")
+	stmt, err := dao.db.Prepare(`
+		SELECT *
+			FROM users
+			WHERE id != ?
+				AND id NOT IN (
+					SELECT swiped_id
+					FROM interactions
+					WHERE swipe_direction = 'YES'
+				)
+		`)
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +60,22 @@ func (dao *UserDAO) FetchUsersWithRank(loggedInUserID string) (*sql.Rows, error)
 		GROUP BY u.id, u.email, u.password_hash, u.name, u.gender, u.age, u.latitude, u.longitude, u.created_at, u.updated_at
 		ORDER BY yes_swipes DESC;`)
 
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	return stmt.Query(loggedInUserID)
+}
+
+func (dao *UserDAO) SortByAgeOrGender(loggedInUserID, sortBy string) (*sql.Rows, error) {
+	query := "SELECT * FROM users WHERE id != ?"
+
+	// Append sorting to the query
+	if sortBy == "age" || sortBy == "gender" {
+		query += fmt.Sprintf(" ORDER BY %s ASC", sortBy)
+	}
+
+	stmt, err := dao.db.Prepare(query)
 	if err != nil {
 		return nil, err
 	}

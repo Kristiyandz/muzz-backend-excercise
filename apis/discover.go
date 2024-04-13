@@ -3,7 +3,9 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 
 	querymapper "github.com/Kristiyandz/muzz-backend-excercise/models/query_mapper"
@@ -28,9 +30,17 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the sortBy parameter is set to "rank"
 	// Additional validation could be added here to ensure that the sortBy parameter is only set to "rank"
-	var shouldSortByRank bool
-	if sortBy == "rank" {
+	var shouldSortByRank, sortByAge, sortByGender bool
+
+	fmt.Println(sortByGender)
+
+	switch sortBy {
+	case "rank":
 		shouldSortByRank = true
+	case "age":
+		sortByAge = true
+	case "gender":
+		sortByGender = true
 	}
 
 	// Connect to the database
@@ -48,6 +58,12 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Fetch all users or users sorted by rank(attractiveness)
 	if shouldSortByRank {
 		rows, err = loggedInUserDao.FetchUsersWithRank(authUserIdStr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else if sortByAge {
+		rows, err = loggedInUserDao.SortByAgeOrGender(authUserIdStr, "age")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -105,6 +121,11 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 			DistanceFromMe: distanceFromMe,
 		})
 	}
+
+	// Sort the users by distance from the authenticated user in ascending order (closest first)
+	sort.Slice(allUsers, func(i, j int) bool {
+		return allUsers[i].DistanceFromMe < allUsers[j].DistanceFromMe
+	})
 
 	// Return the response
 	w.Header().Set("Content-Type", "application/json")

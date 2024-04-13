@@ -35,16 +35,19 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var userId int
 	query := "SELECT password_hash, id FROM users WHERE email = ?"
 
-	// I/O operation can be decoupled into go routine
+	// Check if the user exists in the database
 	err = db.QueryRow(query, reqBody.Email).Scan(&storedHashedPassword, &userId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		return
+	} else if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	// Compare the stored hashed password with the password from the request body
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHashedPassword), []byte(reqBody.Password)); err != nil {
-		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+		http.Error(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
