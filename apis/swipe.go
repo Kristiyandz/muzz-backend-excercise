@@ -42,15 +42,15 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 
 	lggedinUserDao := querymapper.ExtendedUserSwipeDAO(db)
 
-	rows, err := lggedinUserDao.CheckUserInteractions(currentUserId, targetUserId)
+	rows, err := lggedinUserDao.CheckUserInteractions(targetUserId, currentUserId)
 	if err != nil {
-		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
+		http.Error(w, "/swipe cannot check user interactions", http.StatusInternalServerError)
 		return
 	}
 
-	rankingRows, err := lggedinUserDao.ApplyRanking(currentUserId)
+	rankingRows, err := lggedinUserDao.ApplyRanking()
 	if err != nil {
-		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
+		http.Error(w, "/swipe cannot apply rating", http.StatusInternalServerError)
 		return
 	}
 

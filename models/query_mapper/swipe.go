@@ -12,7 +12,7 @@ func ExtendedUserSwipeDAO(db *sql.DB) UserSwipeDAO {
 	return UserSwipeDAO{db: db}
 }
 
-func (dao *UserSwipeDAO) CheckUserInteractions(currentUserId, targetUserId string) (*sql.Rows, error) {
+func (dao *UserSwipeDAO) CheckUserInteractions(targetUserId, currentUserId string) (*sql.Rows, error) {
 	stmt, err := dao.db.Prepare(
 		`SELECT EXISTS (SELECT 1
 			FROM   interactions
@@ -23,19 +23,20 @@ func (dao *UserSwipeDAO) CheckUserInteractions(currentUserId, targetUserId strin
 		return nil, err
 	}
 	defer stmt.Close()
-	return stmt.Query(currentUserId, targetUserId)
+	return stmt.Query(targetUserId, currentUserId)
 }
 
-func (dao *UserSwipeDAO) ApplyRanking(loggedInUserID string) (*sql.Rows, error) {
+func (dao *UserSwipeDAO) ApplyRanking() (*sql.Rows, error) {
 	stmt, err := dao.db.Prepare(
-		`SELECT EXISTS (SELECT 1
+		`SELECT swiped_id AS target_user_id,
+				Count(*)  AS yes_swipes
 			FROM   interactions
-			WHERE  swiper_id = ?
-						 AND swiped_id = ?
-						 AND swipe_direction = 'YES') AS is_match; `)
+			WHERE  swipe_direction = 'YES'
+			GROUP  BY swiped_id
+			ORDER  BY yes_swipes DESC;`)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
-	return stmt.Query(loggedInUserID)
+	return stmt.Query()
 }
