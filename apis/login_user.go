@@ -50,10 +50,6 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate a JWT token and send it in the response
 	jwt := generatejwt.GenerateJWT(reqBody.Email, userId)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
 	response := user.UserLoginResponseBody{
 		Token: jwt,
