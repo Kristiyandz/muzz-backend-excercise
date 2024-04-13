@@ -3,8 +3,11 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 
+	querymapper "github.com/Kristiyandz/muzz-backend-excercise/models/query_mapper"
 	"github.com/Kristiyandz/muzz-backend-excercise/models/user"
 	calculatedistance "github.com/Kristiyandz/muzz-backend-excercise/pkg/calculate_distance"
 	getlatandlong "github.com/Kristiyandz/muzz-backend-excercise/pkg/get_lat_and_long"
@@ -18,11 +21,27 @@ type coordinate struct {
 func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get the authenticated user's ID from the context (set by the JWTAuthMiddleware)
-	authenticatedUserID := r.Context().Value("user_id")
+	authenticatedUserID := r.Context().Value("user_id").(float64)
+	authUserIdStr := strconv.FormatFloat(authenticatedUserID, 'f', -1, 64)
 
-	// Query the database for all users and the authenticated user's latitude and longitude (could be done in a single query with a JOIN, but for simplicity, we'll do two separate queries)
-	query := "SELECT * FROM users WHERE id != ?"
-	loggedInUserLatAndLongQuery := "SELECT latitude, longitude FROM users WHERE id = ?"
+	fmt.Println(authenticatedUserID)
+	// if userID, ok := authenticatedUserID.(int); ok {
+	// 	// userID is now a string, and you can use it as such
+	// 	fmt.Println("Authenticated User ID:", userID)
+	// } else {
+	// 	http.Error(w, "Invalid user ID", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// query parameter to sort by rank (attractiveness)
+	sortBy := r.URL.Query().Get("sort_by")
+
+	// Check if the sortBy parameter is set to "rank"
+	// Additional validation could be added here to ensure that the sortBy parameter is only set to "rank"
+	var shouldSortByRank bool
+	if sortBy == "rank" {
+		shouldSortByRank = true
+	}
 
 	// Connect to the database
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
@@ -32,25 +51,46 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// Query the database for all users
-	rows, err := db.Query(query, authenticatedUserID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+	loggedInUserDao := querymapper.ExtendedUserDAO(db)
 
-	/* Query the database for the authenticated user's latitude and longitude */
-	/* The user lat/long can be passes as claims from the JWT to avoid the query but for simplicyty and making it work, the query will do */
-	loggedInUserLatLong, err := db.Query(loggedInUserLatAndLongQuery, authenticatedUserID)
+	// Query the database for all users and the authenticated user's latitude and longitude (could be done in a single query with a JOIN, but for simplicity, we'll do two separate queries)
+	// query := "SELECT * FROM users WHERE id != ?"
+	// loggedInUserLatAndLongQuery := "SELECT latitude, longitude FROM users WHERE id = ?"
+	// withRankQuery := `
+	// 		SELECT
+	// 		u.id AS user_id,
+	// 		u.email,
+	// 		u.password_hash,
+	// 		u.name,
+	// 		u.gender,
+	// 		u.age,
+	// 		u.latitude,
+	// 		u.longitude,
+	// 		u.created_at,
+	// 		u.updated_at,
+	// 		IFNULL(COUNT(i.swipe_direction), 0) AS yes_swipes
+	// 	FROM users u
+	// 	LEFT JOIN interactions i ON u.id = i.swiped_id AND i.swipe_direction = 'YES'
+	// 	WHERE u.id != ?
+	// 	GROUP BY u.id, u.email, u.password_hash, u.name, u.gender, u.age, u.latitude, u.longitude, u.created_at, u.updated_at
+	// 	ORDER BY yes_swipes DESC;
+	// 	`
+
+	// Set the query to sort by rank if the sortBy parameter is set
+	if shouldSortByRank {
+		fmt.Println("Swapping query to sort by rank")
+		// query = withRankQuery
+	}
+
+	// Query the database for all users
+	rows, err := loggedInUserDao.FetchAllUsers(authUserIdStr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer loggedInUserLatLong.Close()
 
 	// Get the latitude and longitude of the authenticated user
-	lat, long, err := getlatandlong.GetLatLong(db, authenticatedUserID)
+	lat, long, err := getlatandlong.GetLatLong(db, authUserIdStr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,10 +103,20 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	var users user.UsersTableRecord
 	var allUsers []user.DiscoverUserResponseBody
 	for rows.Next() {
-		err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.Latitude, &users.Longitude, &users.CreatedAt, &users.UpdatedAt)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+
+		// Perform a different scan based on whether the query is sorting by rank
+		if shouldSortByRank {
+			err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.Latitude, &users.Longitude, &users.CreatedAt, &users.UpdatedAt, &users.YesSwipes)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.Latitude, &users.Longitude, &users.CreatedAt, &users.UpdatedAt)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		// Store the requested user's coordinates

@@ -39,6 +39,7 @@ type UsersTableRecord struct {
 	Longitude float64 `json:"longitude"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt string  `json:"updated_at"`
+	YesSwipes *int    `json:"yes_swipes"` // This field is only used when sorting by rank
 }
 
 type DiscoverUserResponseBody struct {
@@ -51,5 +52,5 @@ type DiscoverUserResponseBody struct {
 
 type MatchedResultResponseBody struct {
 	Match   bool `json:"match"`
-	MatchID *int `json:"matchId"`
+	MatchID *int `json:"matchId"` // This field is only used when a match is created
 }

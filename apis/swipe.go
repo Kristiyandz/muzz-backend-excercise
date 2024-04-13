@@ -3,6 +3,7 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -35,10 +36,17 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 	interactionsQuery := `SELECT EXISTS (
 		SELECT 1
 		FROM interactions
-		WHERE user_id = ?
-		AND target_user_id = ?
-		AND choice = ?
+		WHERE swiper_id = ?
+		AND swiped_id = ?
+		AND swipe_direction = 'YES'
 	) AS is_match;`
+
+	rankingQuery := `
+		SELECT swiped_id AS target_user_id, COUNT(*) AS yes_swipes
+		FROM interactions
+		WHERE swipe_direction = 'YES'
+		GROUP BY swiped_id
+		ORDER BY yes_swipes DESC;`
 
 	// Connect to the database
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
@@ -49,12 +57,36 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Query the database to check if the user has already swiped on the target user
-	rows, err := db.Query(interactionsQuery, targetUserId, currentUserId, match)
+	rows, err := db.Query(interactionsQuery, targetUserId, currentUserId)
 	if err != nil {
 		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
+
+	rankingRows, err := db.Query(rankingQuery)
+	if err != nil {
+		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var userId, yesSwipes int
+	for rankingRows.Next() {
+		err := rankingRows.Scan(&userId, &yesSwipes)
+		if err != nil {
+			http.Error(w, "/swipe cannot scan ranking rows", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := rankingRows.Err(); err != nil {
+		http.Error(w, "/swipe cannot iterate ranking rows", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("User ID: ", userId)
+	fmt.Println("Yes Swipes: ", yesSwipes)
 
 	// Check if the user has already swiped on the target user
 	var isMatch bool
@@ -91,7 +123,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		// If the user has not already swiped on the target user, insert the swipe into the interactions table
-		interactionsInsertQuery := `INSERT INTO interactions (user_id, target_user_id, choice, created_at) VALUES (?, ?, ?, ?)`
+		interactionsInsertQuery := `INSERT INTO interactions (swiper_id, swiped_id, swipe_direction, created_at) VALUES (?, ?, ?, ?)`
 		_, err := db.Exec(interactionsInsertQuery, currentUserId, targetUserId, match, time.Now())
 		if err != nil {
 			http.Error(w, "/swipe failed to insert into interactions", http.StatusInternalServerError)
