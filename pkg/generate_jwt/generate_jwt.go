@@ -11,7 +11,8 @@ import (
 )
 
 func loadSignKey() string {
-	// keyData, err := ioutil.ReadFile("jwtRS256.key")
+	// Ideally this key will be fetched from a secure location such as AWS Secrets Manager or a secure file storage
+	// This is just an example showing how the private key can be used to sign the JWT token
 	keyData, err := os.Open("jwtRS256.key")
 	if err != nil {
 		log.Fatal("Cannot read private key file", err)
@@ -42,6 +43,7 @@ func loadSignKey() string {
 }
 
 // asymmetric encryption using a private key and a public key to verify the token
+// GenerateJWT generates a JWT token using the user's email and user ID
 func GenerateJWT(userEmail string, userId int) string {
 	var (
 		key string
@@ -51,19 +53,25 @@ func GenerateJWT(userEmail string, userId int) string {
 
 	key = loadSignKey()
 
+	// Create a new token object, specifying the signing method and the claims
+	// we can use the claims to store any information we want to include in the token
 	t = jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"email":   userEmail,
 		"user_id": userId,
 	})
+
+	// Parse the private key
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(key))
 	if err != nil {
 		log.Fatal("Cannot parse private key", err)
 	}
 
+	// Sign the token with the private key
 	s, err = t.SignedString(privateKey)
 	if err != nil {
 		log.Fatal("Cannot sign key", err)
 	}
 
+	// Return the signed token
 	return s
 }

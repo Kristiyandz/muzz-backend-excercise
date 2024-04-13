@@ -1,7 +1,6 @@
-package distancebetweentwopoints
+package calculatedistance
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -35,7 +34,9 @@ import (
 // :::           GeoDataSource.com (C) All Rights Reserved 2017                :::
 // :::                                                                         :::
 // :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-func Distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...string) float64 {
+
+// Got the functionality from https://gist.github.com/hotdang-ca/6c1ee75c48e515aec5bc6db6e3265e49
+func Distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...string) int {
 	radlat1 := float64(math.Pi * lat1 / 180)
 	radlat2 := float64(math.Pi * lat2 / 180)
 
@@ -59,18 +60,6 @@ func Distance(lat1 float64, lng1 float64, lat2 float64, lng2 float64, unit ...st
 		}
 	}
 
-	return dist
-}
-
-// usage:
-func main() {
-	type coordinate struct {
-		lat float64
-		lng float64
-	}
-
-	winnipeg := coordinate{49.895077, -97.138451}
-	regina := coordinate{50.445210, -104.618896}
-
-	fmt.Println(distance(winnipeg.lat, winnipeg.lng, regina.lat, regina.lng, "N"))
+	// round up the number to be whole
+	return int(dist)
 }

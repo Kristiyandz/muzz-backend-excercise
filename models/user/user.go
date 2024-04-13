@@ -6,8 +6,8 @@ type User struct {
 	Name      string  `json:"name"`
 	Gender    string  `json:"gender"`
 	Age       int     `json:"age"`
-	Latitude  float32 `json:"latitude"`
-	Longitude float32 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 type UserCreateResponseBody struct {
@@ -35,24 +35,21 @@ type UsersTableRecord struct {
 	Name      string  `json:"name"`
 	Gender    string  `json:"gender"`
 	Age       int     `json:"age"`
-	Latitude  float32 `json:"latitude"`
-	Longitude float32 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt string  `json:"updated_at"`
 }
 
 type DiscoverUserResponseBody struct {
-	ID        int     `json:"id"`
-	Name      string  `json:"name"`
-	Gender    string  `json:"gender"`
-	Age       int     `json:"age"`
-	Latitude  float32 `json:"latitude"`
-	Longitude float32 `json:"longitude"`
+	ID             int    `json:"id"`
+	Name           string `json:"name"`
+	Gender         string `json:"gender"`
+	Age            int    `json:"age"`
+	DistanceFromMe int    `json:"distanceFromMe"`
 }
 
 type MatchedResultResponseBody struct {
 	Match   bool `json:"match"`
 	MatchID *int `json:"matchId"`
 }
-
-// continue the code here

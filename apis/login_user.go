@@ -13,8 +13,8 @@ import (
 
 func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Unmarshal the request body
 	var reqBody user.UserLoginRequestBody
-
 	errUnmarshal := json.NewDecoder(r.Body).Decode(&reqBody)
 
 	if errUnmarshal != nil {
@@ -22,6 +22,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Connect to the database
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -29,21 +30,25 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
+	// Query the database for the user's hashed password
 	var storedHashedPassword string
 	var userId int
 	query := "SELECT password_hash, id FROM users WHERE email = ?"
 
+	// I/O operation can be decoupled into go routine
 	err = db.QueryRow(query, reqBody.Email).Scan(&storedHashedPassword, &userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Compare the stored hashed password with the password from the request body
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHashedPassword), []byte(reqBody.Password)); err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
 
+	// Generate a JWT token and send it in the response
 	jwt := generatejwt.GenerateJWT(reqBody.Email, userId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,6 +59,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		Token: jwt,
 	}
 
+	// Send the response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 

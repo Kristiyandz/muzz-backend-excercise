@@ -16,6 +16,8 @@ import (
 )
 
 func loadPublicKey() *rsa.PublicKey {
+	// Ideally his key will be fetched from a secure location such as AWS Secrets Manager or a secure file storage
+	// This is just an example showing how the public key can be used to verify the JWT token
 	rawFile, err := os.Open("jwtRS256.key.pub")
 	if err != nil {
 		log.Fatal("Cannot read public key file", err)
@@ -39,31 +41,30 @@ func loadPublicKey() *rsa.PublicKey {
 		log.Fatal("Cannot parse public key", err)
 	}
 
-	// marshalledPublicKey, err := x509.MarshalPKIXPublicKey(publicKey)
-	// if err != nil {
-	// 	log.Fatal("Cannot marshal public key", err)
-	// }
-
 	return publicKey.(*rsa.PublicKey)
 
 }
 
 func JWTAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get the Authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(w, "Authorization header missing", http.StatusUnauthorized)
 			return
 		}
 
+		// Check the format of the Authorization header
 		bearerToken := strings.Split(authHeader, " ")
 		if len(bearerToken) != 2 || bearerToken[0] != "Bearer" {
 			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
 			return
 		}
 
+		// Load the public key
 		publicKey := loadPublicKey()
 
+		// Parse the JWT token
 		token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -76,12 +77,14 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// Check if the token is valid and extract the claims
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			ctx := context.WithValue(r.Context(), "user_id", claims["user_id"])
-			fmt.Println(claims["user_id"], "user_id")
-			fmt.Println(ctx, "ctx")
+
+			// Token is valid, proceed with the next handler
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
+			// Token is invalid
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}

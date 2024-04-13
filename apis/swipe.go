@@ -3,7 +3,6 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -32,10 +31,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("currentUserId", currentUserId)
-	fmt.Println("targetUserId", targetUserId)
-	fmt.Println("match", match)
-
+	// Check if the user has already swiped on the target user
 	interactionsQuery := `SELECT EXISTS (
 		SELECT 1
 		FROM interactions
@@ -44,6 +40,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		AND choice = ?
 	) AS is_match;`
 
+	// Connect to the database
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
 		http.Error(w, "/swpie cannot connect to DB", http.StatusInternalServerError)
@@ -51,14 +48,15 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
+	// Query the database to check if the user has already swiped on the target user
 	rows, err := db.Query(interactionsQuery, targetUserId, currentUserId, match)
 	if err != nil {
 		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
 		return
 	}
-
 	defer rows.Close()
 
+	// Check if the user has already swiped on the target user
 	var isMatch bool
 	for rows.Next() {
 		err := rows.Scan(&isMatch)
@@ -68,6 +66,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// If the user has already swiped on the target user and the choice is "match", create a match
 	if isMatch {
 		matchQuery := `INSERT INTO matches(user1_id, user2_id, created_at) VALUES (?, ?, ?)`
 		_, err := db.Exec(matchQuery, currentUserId, targetUserId, time.Now())
@@ -81,6 +80,8 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "/swipe failed to convert str to int", http.StatusInternalServerError)
 			return
 		}
+
+		// Return the match response
 		matchResult := user.MatchedResultResponseBody{
 			Match:   true,
 			MatchID: &userIdIntValue,
@@ -89,18 +90,21 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(matchResult)
 
 	} else {
+		// If the user has not already swiped on the target user, insert the swipe into the interactions table
 		interactionsInsertQuery := `INSERT INTO interactions (user_id, target_user_id, choice, created_at) VALUES (?, ?, ?, ?)`
 		_, err := db.Exec(interactionsInsertQuery, currentUserId, targetUserId, match, time.Now())
 		if err != nil {
 			http.Error(w, "/swipe failed to insert into interactions", http.StatusInternalServerError)
 			return
 		}
-		noMatchResult := user.MatchedResultResponseBody{
+
+		// Return the swipe result
+		swipeResult := user.MatchedResultResponseBody{
 			Match:   false,
 			MatchID: nil,
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(noMatchResult)
+		json.NewEncoder(w).Encode(swipeResult)
 	}
 
 }

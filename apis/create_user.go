@@ -9,7 +9,6 @@ import (
 	hashpassword "github.com/Kristiyandz/muzz-backend-excercise/pkg/hash_password"
 	randomchoice "github.com/Kristiyandz/muzz-backend-excercise/pkg/random_choice"
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/icrowley/fake"
 )
 
 func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,8 +31,8 @@ func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
 		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Gender:    randomGenderChoice,
 		Age:       gofakeit.Number(18, 100),
-		Latitude:  fake.Latitude(),
-		Longitude: fake.Longitude(),
+		Latitude:  gofakeit.Latitude(),
+		Longitude: gofakeit.Longitude(),
 	}
 
 	// Insert the random user into the database
