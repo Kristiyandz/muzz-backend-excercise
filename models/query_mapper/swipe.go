@@ -12,7 +12,7 @@ func ExtendedUserSwipeDAO(db *sql.DB) UserSwipeDAO {
 	return UserSwipeDAO{db: db}
 }
 
-func (dao *UserSwipeDAO) CheckUserInteractions(loggedInUserID string) (*sql.Rows, error) {
+func (dao *UserSwipeDAO) CheckUserInteractions(currentUserId, targetUserId string) (*sql.Rows, error) {
 	stmt, err := dao.db.Prepare(
 		`SELECT EXISTS (SELECT 1
 			FROM   interactions
@@ -23,7 +23,7 @@ func (dao *UserSwipeDAO) CheckUserInteractions(loggedInUserID string) (*sql.Rows
 		return nil, err
 	}
 	defer stmt.Close()
-	return stmt.Query(loggedInUserID)
+	return stmt.Query(currentUserId, targetUserId)
 }
 
 func (dao *UserSwipeDAO) ApplyRanking(loggedInUserID string) (*sql.Rows, error) {

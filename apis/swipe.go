@@ -3,11 +3,11 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	querymapper "github.com/Kristiyandz/muzz-backend-excercise/models/query_mapper"
 	"github.com/Kristiyandz/muzz-backend-excercise/models/user"
 )
 
@@ -32,22 +32,6 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the user has already swiped on the target user
-	interactionsQuery := `SELECT EXISTS (
-		SELECT 1
-		FROM interactions
-		WHERE swiper_id = ?
-		AND swiped_id = ?
-		AND swipe_direction = 'YES'
-	) AS is_match;`
-
-	rankingQuery := `
-		SELECT swiped_id AS target_user_id, COUNT(*) AS yes_swipes
-		FROM interactions
-		WHERE swipe_direction = 'YES'
-		GROUP BY swiped_id
-		ORDER BY yes_swipes DESC;`
-
 	// Connect to the database
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
@@ -56,20 +40,19 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	// Query the database to check if the user has already swiped on the target user
-	rows, err := db.Query(interactionsQuery, targetUserId, currentUserId)
-	if err != nil {
-		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+	lggedinUserDao := querymapper.ExtendedUserSwipeDAO(db)
 
-	rankingRows, err := db.Query(rankingQuery)
+	rows, err := lggedinUserDao.CheckUserInteractions(currentUserId, targetUserId)
 	if err != nil {
 		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+
+	rankingRows, err := lggedinUserDao.ApplyRanking(currentUserId)
+	if err != nil {
+		http.Error(w, "/swipe cannot query db", http.StatusInternalServerError)
+		return
+	}
 
 	var userId, yesSwipes int
 	for rankingRows.Next() {
@@ -84,9 +67,6 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "/swipe cannot iterate ranking rows", http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Println("User ID: ", userId)
-	fmt.Println("Yes Swipes: ", yesSwipes)
 
 	// Check if the user has already swiped on the target user
 	var isMatch bool
