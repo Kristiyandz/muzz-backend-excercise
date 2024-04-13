@@ -3,7 +3,6 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -24,15 +23,6 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	authenticatedUserID := r.Context().Value("user_id").(float64)
 	authUserIdStr := strconv.FormatFloat(authenticatedUserID, 'f', -1, 64)
 
-	fmt.Println(authenticatedUserID)
-	// if userID, ok := authenticatedUserID.(int); ok {
-	// 	// userID is now a string, and you can use it as such
-	// 	fmt.Println("Authenticated User ID:", userID)
-	// } else {
-	// 	http.Error(w, "Invalid user ID", http.StatusInternalServerError)
-	// 	return
-	// }
-
 	// query parameter to sort by rank (attractiveness)
 	sortBy := r.URL.Query().Get("sort_by")
 
@@ -44,6 +34,7 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Connect to the database
+	// DB connection name and password should be stored in a secure location but for the sake of simplicity, we will hardcode it here
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,40 +44,21 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	loggedInUserDao := querymapper.ExtendedUserDAO(db)
 
-	// Query the database for all users and the authenticated user's latitude and longitude (could be done in a single query with a JOIN, but for simplicity, we'll do two separate queries)
-	// query := "SELECT * FROM users WHERE id != ?"
-	// loggedInUserLatAndLongQuery := "SELECT latitude, longitude FROM users WHERE id = ?"
-	// withRankQuery := `
-	// 		SELECT
-	// 		u.id AS user_id,
-	// 		u.email,
-	// 		u.password_hash,
-	// 		u.name,
-	// 		u.gender,
-	// 		u.age,
-	// 		u.latitude,
-	// 		u.longitude,
-	// 		u.created_at,
-	// 		u.updated_at,
-	// 		IFNULL(COUNT(i.swipe_direction), 0) AS yes_swipes
-	// 	FROM users u
-	// 	LEFT JOIN interactions i ON u.id = i.swiped_id AND i.swipe_direction = 'YES'
-	// 	WHERE u.id != ?
-	// 	GROUP BY u.id, u.email, u.password_hash, u.name, u.gender, u.age, u.latitude, u.longitude, u.created_at, u.updated_at
-	// 	ORDER BY yes_swipes DESC;
-	// 	`
-
-	// Set the query to sort by rank if the sortBy parameter is set
+	var rows *sql.Rows
+	// Fetch all users or users sorted by rank(attractiveness)
 	if shouldSortByRank {
-		fmt.Println("Swapping query to sort by rank")
-		// query = withRankQuery
-	}
-
-	// Query the database for all users
-	rows, err := loggedInUserDao.FetchAllUsers(authUserIdStr)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		rows, err = loggedInUserDao.FetchUsersWithRank(authUserIdStr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// Fetch all users(non-sorted)
+		rows, err = loggedInUserDao.FetchAllUsers(authUserIdStr)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Get the latitude and longitude of the authenticated user
@@ -103,7 +75,6 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 	var users user.UsersTableRecord
 	var allUsers []user.DiscoverUserResponseBody
 	for rows.Next() {
-
 		// Perform a different scan based on whether the query is sorting by rank
 		if shouldSortByRank {
 			err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.Latitude, &users.Longitude, &users.CreatedAt, &users.UpdatedAt, &users.YesSwipes)
@@ -112,6 +83,7 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
+			// Perform default scan
 			err := rows.Scan(&users.ID, &users.Email, &users.Password, &users.Name, &users.Gender, &users.Age, &users.Latitude, &users.Longitude, &users.CreatedAt, &users.UpdatedAt)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
