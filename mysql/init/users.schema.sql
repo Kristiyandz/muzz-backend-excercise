@@ -15,18 +15,3 @@ INSERT INTO muzzmaindb.users (email, password_hash, name, gender, age, latitude,
 ('jonwick@example.com', '$2y$14$vAwYSgSsVPLN1OU/bYUT7e4n37EGNMRb7QjNuvCNf.qk/cIdxX7pG', 'John Wick', 'male', 25, 51.507351, -0.127758),
 ('tonystark@example.com', '$2y$14$RExTk1W6b5j7XSRDywY4r.pcajHZ5UZMZlTQ2XYGCPTG/YHHlQXMO', 'Tony Stark', 'male', 30, 50.715557, -3.530875),
 ('billieeilish@example.com', '$2y$14$RExTk1W6b5j7XSRDywY4r.pcajHZ5UZMZlTQ2XYGCPTG/YHHlQXMO', 'Billie Eilish', 'female', 20, 53.480759, -2.242631);
-
--- {
---     "email": "billieeilish@example.com",
---     "password": "password-user-two"
--- }
-
--- {
---     "email": "jonwick@example.com",
---     "password": "password-user-one"
--- }
-
--- {
---     "email": "tonystark@example.com",
---     "password": "password-user-two"
--- }

@@ -9,6 +9,27 @@ To build, run, stop and delete the application from Docker, use the following `M
 - `make down` - stops the application
 - `make nuke` - deletes the application from docker (will require a make build again)
 
+### Seeded users and login credentials available
+Use these seeded users to login and begin interracting with the endpoints
+
+```json
+{
+    "email": "billieeilish@example.com",
+    "password": "password-user-two"
+}
+
+{
+    "email": "jonwick@example.com",
+    "password": "password-user-one"
+}
+
+{
+    "email": "tonystark@example.com",
+    "password": "password-user-two"
+}
+```
+
+
 ## Architecture Overview
 
 ### Endpoints
