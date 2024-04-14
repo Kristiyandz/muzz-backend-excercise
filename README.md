@@ -51,7 +51,7 @@ Each endpoints apart from `/user/login` is protected by an auth middleware
     - sort by gender http://localhost:8080/user/discover?sort_by=gender
   - sort by rank (attractiveness) http://localhost:8080/user/discover?sort_by=rank
     - To increase the rank of someone one, use the same `target_user_id`, but change the `user_id` when calling `/swipe?user_id=1&target_user_id=2&match=YES`
-  - To decrease the rank of a given user pass `&match=NO`
+    - To decrease the rank of a given user pass `&match=NO`
 - POST http://localhost:8080/user/swipe?user_id=1&target_user_id=2&match=YES (or NO)
 
 ### Authentication and Authorisation
