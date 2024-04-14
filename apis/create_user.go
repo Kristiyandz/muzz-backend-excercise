@@ -21,7 +21,7 @@ func CreateRandomUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate a random gender selection
-	choices := []interface{}{"Male", "Female", "Other", "Prefer not to say"}
+	choices := []interface{}{"female", "male"}
 	randomGenderChoice := randomchoice.RandomChoiceFromSlice(choices).(string)
 
 	// Create a random user

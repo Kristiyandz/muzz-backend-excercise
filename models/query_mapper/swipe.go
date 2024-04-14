@@ -12,20 +12,36 @@ func ExtendedUserSwipeDAO(db *sql.DB) UserSwipeDAO {
 	return UserSwipeDAO{db: db}
 }
 
-func (dao *UserSwipeDAO) CheckUserInteractions(currentUserId, targetUserId string) (*sql.Rows, error) {
+func (dao *UserSwipeDAO) CheckUserInteractions(targetUserId, currentUserId string) (bool, error) {
+
+	/*
+		@TODO:(BUG): Currently if the first user swipes YES,
+		eventually the second user swipes NO,
+		a match will still be created.
+
+		Works when the first user swipes NO and the second user swipes YES.
+	*/
 	stmt, err := dao.db.Prepare(
 		`SELECT EXISTS (
-		    SELECT 1
-		    FROM interactions as a
-		    JOIN interactions as b ON a.swiper_id = b.swiped_id AND a.swiped_id = b.swiper_id
-		    WHERE a.swiper_id = ? AND a.swiped_id = ? 
-		      AND a.swipe_direction = 'YES' AND b.swipe_direction = 'YES'
+			SELECT 1
+			FROM interactions
+			WHERE swiper_id = ?
+			AND swiped_id = ?
+			AND swipe_direction = 'YES'
 		) AS is_match;`)
+
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 	defer stmt.Close()
-	return stmt.Query(currentUserId, targetUserId)
+
+	var isMatch bool
+	err = stmt.QueryRow(targetUserId, currentUserId).Scan(&isMatch)
+	if err != nil {
+		return false, err
+
+	}
+	return isMatch, nil
 }
 
 func (dao *UserSwipeDAO) ApplyRanking() (*sql.Rows, error) {

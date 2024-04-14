@@ -71,8 +71,11 @@ func (dao *UserDAO) SortByAgeOrGender(loggedInUserID, sortBy string) (*sql.Rows,
 	query := "SELECT * FROM users WHERE id != ?"
 
 	// Append sorting to the query
-	if sortBy == "age" || sortBy == "gender" {
+	if sortBy == "age" {
 		query += fmt.Sprintf(" ORDER BY %s ASC", sortBy)
+	} else if sortBy == "gender" {
+		// simple case insensitive sorting
+		query += " ORDER BY CASE gender WHEN 'female' THEN 1 WHEN 'male' THEN 2 ELSE 3 END ASC;"
 	}
 
 	stmt, err := dao.db.Prepare(query)

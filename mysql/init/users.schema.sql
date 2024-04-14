@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS muzzmaindb.users(
 ) ENGINE=InnoDB;
 
 INSERT INTO muzzmaindb.users (email, password_hash, name, gender, age, latitude, longitude) VALUES
-('jonwick@example.com', '$2y$14$vAwYSgSsVPLN1OU/bYUT7e4n37EGNMRb7QjNuvCNf.qk/cIdxX7pG', 'John Wick', 'Male', 25, 51.507351, -0.127758),
-('tonystark@example.com', '$2y$14$RExTk1W6b5j7XSRDywY4r.pcajHZ5UZMZlTQ2XYGCPTG/YHHlQXMO', 'Tony Stark', 'Male', 30, 50.715557, -3.530875),
-('billieeilish@example.com', '$2y$14$RExTk1W6b5j7XSRDywY4r.pcajHZ5UZMZlTQ2XYGCPTG/YHHlQXMO', 'Billie Eilish', 'Female', 20, 53.480759, -2.242631);
+('jonwick@example.com', '$2y$14$vAwYSgSsVPLN1OU/bYUT7e4n37EGNMRb7QjNuvCNf.qk/cIdxX7pG', 'John Wick', 'male', 25, 51.507351, -0.127758),
+('tonystark@example.com', '$2y$14$RExTk1W6b5j7XSRDywY4r.pcajHZ5UZMZlTQ2XYGCPTG/YHHlQXMO', 'Tony Stark', 'male', 30, 50.715557, -3.530875),
+('billieeilish@example.com', '$2y$14$RExTk1W6b5j7XSRDywY4r.pcajHZ5UZMZlTQ2XYGCPTG/YHHlQXMO', 'Billie Eilish', 'female', 20, 53.480759, -2.242631);
 
 -- {
 --     "email": "billieeilish@example.com",

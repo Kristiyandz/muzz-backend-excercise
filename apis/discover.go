@@ -68,6 +68,12 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	} else if sortByGender {
+		rows, err = loggedInUserDao.SortByAgeOrGender(authUserIdStr, "gender")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	} else {
 		// Fetch all users(non-sorted)
 		rows, err = loggedInUserDao.FetchAllUsers(authUserIdStr)
@@ -122,10 +128,12 @@ func DiscoverUsersHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// Sort the users by distance from the authenticated user in ascending order (closest first)
-	sort.Slice(allUsers, func(i, j int) bool {
-		return allUsers[i].DistanceFromMe < allUsers[j].DistanceFromMe
-	})
+	if sortBy == "distance" {
+		// Sort the users by distance from the authenticated user in ascending order (closest first)
+		sort.Slice(allUsers, func(i, j int) bool {
+			return allUsers[i].DistanceFromMe < allUsers[j].DistanceFromMe
+		})
+	}
 
 	// Return the response
 	w.Header().Set("Content-Type", "application/json")

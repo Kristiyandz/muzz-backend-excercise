@@ -3,7 +3,6 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -43,13 +42,7 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 
 	lggedinUserDao := querymapper.ExtendedUserSwipeDAO(db)
 
-	fmt.Println("***************************")
-	fmt.Println("currentUserId", currentUserId)
-	fmt.Println("targetUserId", targetUserId)
-	fmt.Println("match", match)
-	fmt.Println("***************************")
-
-	rows, err := lggedinUserDao.CheckUserInteractions(currentUserId, targetUserId)
+	isMatch, err := lggedinUserDao.CheckUserInteractions(targetUserId, currentUserId)
 	if err != nil {
 		http.Error(w, "/swipe cannot check user interactions", http.StatusInternalServerError)
 		return
@@ -73,16 +66,6 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 	if err := rankingRows.Err(); err != nil {
 		http.Error(w, "/swipe cannot iterate ranking rows", http.StatusInternalServerError)
 		return
-	}
-
-	// Check if the user has already swiped on the target user
-	var isMatch bool
-	for rows.Next() {
-		err := rows.Scan(&isMatch)
-		if err != nil {
-			http.Error(w, "/swipe cannot scan rows", http.StatusInternalServerError)
-			return
-		}
 	}
 
 	// If the user has already swiped on the target user and the choice is "match", create a match
