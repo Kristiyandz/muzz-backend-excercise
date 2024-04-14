@@ -23,6 +23,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Connect to the database
+	// For simplicity, we will hardcode the database connection details here but in a production application, these should be stored securely
 	db, err := sql.Open("mysql", "root:password@tcp(db:3306)/muzzmaindb")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

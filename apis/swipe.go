@@ -3,6 +3,7 @@ package apis
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -42,7 +43,13 @@ func SwipeHandler(w http.ResponseWriter, r *http.Request) {
 
 	lggedinUserDao := querymapper.ExtendedUserSwipeDAO(db)
 
-	rows, err := lggedinUserDao.CheckUserInteractions(targetUserId, currentUserId)
+	fmt.Println("***************************")
+	fmt.Println("currentUserId", currentUserId)
+	fmt.Println("targetUserId", targetUserId)
+	fmt.Println("match", match)
+	fmt.Println("***************************")
+
+	rows, err := lggedinUserDao.CheckUserInteractions(currentUserId, targetUserId)
 	if err != nil {
 		http.Error(w, "/swipe cannot check user interactions", http.StatusInternalServerError)
 		return
