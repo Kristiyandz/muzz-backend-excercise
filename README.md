@@ -1,7 +1,7 @@
 # Overview
 
 The application is built to run in Docker with a local stack setup.
-The local stack consists of the image for the app itself and an image for the DB, in this case we are using `MySQL`
+The local stack consists of the image for the app itself and an image for the DB, in this case we are using `MySQL`.\
 Few tables and example data is seeded when the application is built for the first time.
 
 Secrets and passwords have no meaning outside of this excercise so they are hardcoded or stored in local files. Supporting comments are provided in the code.
