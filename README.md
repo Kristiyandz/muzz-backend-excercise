@@ -1,6 +1,7 @@
 # Overview
 The application is built to run in Docker with a local stack setup.
 The local stack consists of the image for the app itself and an image for the DB, in this case we are using `MySQL`
+Few tables and example data is seeded when the application is built for the first time.
 ### How to run the application
 
 To build, run, stop and delete the application from Docker, use the following `Makefile` commands:
