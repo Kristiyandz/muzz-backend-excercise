@@ -90,3 +90,4 @@ Since we have users, interactions and potential matches, a relational database w
 - API Gateway and single authoriser function behind all routes
 - Implement routing, example `github.com/gorilla/mux` to cleanup the code and make it easier to add new routes or subroutes
 - Further edge cases considerations
+- Comprehensive set of tests
